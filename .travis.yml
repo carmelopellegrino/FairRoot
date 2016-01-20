@@ -5,16 +5,18 @@ language: cpp
 #    - /opt/fairsoft/nov15p1
 
 env:
+
+  global:
+    # COVERITY_SCAN_TOKEN
+    # ** specific to your project **
+    - secure: "t65xtdQ7WpWBujB04gE7Ezh9cZ/GtHFEnwJyHeZdFDLeM0YgcNg8+Iv0LQj40DCbfMLV7c0lDV9hKOqfn+OhtHzBHglaiyHwMRZREH0VoIEnK/0W1z4nDFe0z5uv0SCp1UkhsnotDTiR99OzENg525SfTEiO5n9tdlz0gDCA40M="
     - ROOT_VERSION=root5
-    - ROOT_VERSION=root6
 
 os:
     - linux
-    - osx
 
 compiler:
     - gcc
-    - clang
 
 matrix:
     exclude:
@@ -22,6 +24,33 @@ matrix:
           compiler: gcc
         - os: linux
           compiler: clang
+
+
+addons:
+  coverity_scan:
+
+    # GitHub project metadata
+    # ** specific to your project **
+    project:
+      name: FairRootGroup/FairRoot
+      version: dev
+      description: "dev branch"
+
+    # Where email notification of build analysis results will be sent
+    notification_email: f.uhlig@gsi.de
+
+    # Commands to prepare for build_command
+    # ** likely specific to your build **
+    build_command_prepend: 'mkdir build && cd build && export SIMPATH=/opt/fairsoft/nov15p1_root5 && cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ..'
+
+    # The command that will be added as an argument to "cov-build" to compile your project for analysis,
+    # ** likely specific to your build **
+    build_command: make -j2
+
+    # Pattern to match selecting branches that will run analysis. We recommend leaving this set to 'coverity_scan'.
+    # Take care in resource usage, and consider the build frequency allowances per
+    #   https://scan.coverity.com/faq#frequency
+    branch_pattern: coverity_scan
 
 # The following gives us Ubuntu 14.04 LTS instead of 12.04 LTS
 sudo: required
@@ -75,7 +104,9 @@ before_script:
     - cat Dart.cfg
 
 script:
-    - ./Dart.sh Experimental Dart.cfg
+    - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then
+        ./Dart.sh Experimental Dart.cfg;
+      fi   
 
 notifications:
   email:
